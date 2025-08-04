@@ -25,13 +25,13 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -43,6 +43,13 @@ class _LoginViewState extends State<LoginView> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthSuccess) {
+            // Show success message with user name
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Selamat datang, ${state.user.name}!'),
+                backgroundColor: Colors.green,
+              ),
+            );
             context.go('/dashboard');
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -68,7 +75,7 @@ class _LoginViewState extends State<LoginView> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Logo atau title
+                      // Logo/title
                       Icon(
                         Icons.point_of_sale,
                         size: 80,
@@ -92,19 +99,23 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Username field
+                      // Email field
                       TextFormField(
-                        controller: _usernameController,
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          labelText: 'Username',
-                          prefixIcon: const Icon(Icons.person),
+                          labelText: 'Email',
+                          prefixIcon: const Icon(Icons.email),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Username tidak boleh kosong';
+                            return 'Email tidak boleh kosong';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Format email tidak valid';
                           }
                           return null;
                         },
@@ -144,7 +155,7 @@ class _LoginViewState extends State<LoginView> {
                                       if (_formKey.currentState!.validate()) {
                                         context.read<AuthBloc>().add(
                                           LoginRequested(
-                                            username: _usernameController.text,
+                                            email: _emailController.text,
                                             password: _passwordController.text,
                                           ),
                                         );

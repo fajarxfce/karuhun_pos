@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
   // Configure dependency injection
-  configureDependencies();
-
+  await configureDependencies();
+  
   runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
+}class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
