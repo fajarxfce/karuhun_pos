@@ -1,56 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../domain/entities/product.dart';
-import '../bloc/product_bloc.dart';
+import '../../domain/usecases/get_products_usecase.dart';
 import '../widgets/product_card.dart';
 
-class ProductListPage extends StatelessWidget {
+class ProductListPage extends StatefulWidget {
   const ProductListPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<ProductBloc>()..add(const LoadProducts()),
-      child: const ProductListView(),
-    );
-  }
+  State<ProductListPage> createState() => _ProductListPageState();
 }
 
-class ProductListView extends StatefulWidget {
-  const ProductListView({super.key});
+class _ProductListPageState extends State<ProductListPage> {
+  static const _pageSize = 10;
 
-  @override
-  State<ProductListView> createState() => _ProductListViewState();
-}
+  final PagingController<int, Product> _pagingController = PagingController(
+    firstPageKey: 1,
+  );
 
-class _ProductListViewState extends State<ProductListView> {
-  final ScrollController _scrollController = ScrollController();
+  late final GetProductsUseCase _getProductsUseCase;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    _getProductsUseCase = getIt<GetProductsUseCase>();
+    _pagingController.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey);
+    });
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _pagingController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_isBottom) {
-      context.read<ProductBloc>().add(const LoadMoreProducts());
-    }
-  }
+  Future<void> _fetchPage(int pageKey) async {
+    try {
+      final result = await _getProductsUseCase(
+        GetProductsParams(
+          page: pageKey,
+          perPage: _pageSize,
+          orderBy: 'products.id',
+          order: 'asc',
+        ),
+      );
 
-  bool get _isBottom {
-    if (!_scrollController.hasClients) return false;
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final currentScroll = _scrollController.offset;
-    return currentScroll >= (maxScroll * 0.9);
+      result.fold(
+        (failure) {
+          _pagingController.error = failure.toString();
+        },
+        (paginatedProducts) {
+          final newItems = paginatedProducts.data;
+          final isLastPage = pageKey >= paginatedProducts.lastPage;
+
+          if (isLastPage) {
+            _pagingController.appendLastPage(newItems);
+          } else {
+            final nextPageKey = pageKey + 1;
+            _pagingController.appendPage(newItems, nextPageKey);
+          }
+        },
+      );
+    } catch (error) {
+      _pagingController.error = error;
+    }
   }
 
   @override
@@ -70,102 +86,74 @@ class _ProductListViewState extends State<ProductListView> {
           ),
         ],
       ),
-      body: BlocBuilder<ProductBloc, ProductState>(
-        builder: (context, state) {
-          if (state is ProductLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (state is ProductError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Oops! Terjadi kesalahan',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.message,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<ProductBloc>().add(const RefreshProducts());
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Coba Lagi'),
-                  ),
-                ],
+      body: RefreshIndicator(
+        onRefresh: () => Future.sync(() => _pagingController.refresh()),
+        child: PagedListView<int, Product>(
+          pagingController: _pagingController,
+          builderDelegate: PagedChildBuilderDelegate<Product>(
+            itemBuilder: (context, product, index) => Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+              child: ProductCard(
+                product: product,
+                onTap: () => _onProductTap(context, product),
               ),
-            );
-          }
-
-          if (state is ProductLoaded) {
-            return RefreshIndicator(
-              onRefresh: () async {
-                context.read<ProductBloc>().add(const RefreshProducts());
-              },
-              child: Column(
-                children: [
-                  // Product count header
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    color: Theme.of(context).primaryColor.withOpacity(0.05),
-                    child: Text(
-                      'Menampilkan ${state.products.length} produk',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-
-                  // Product list
-                  Expanded(
-                    child: state.products.isEmpty
-                        ? _buildEmptyState(context)
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.all(16),
-                            itemCount:
-                                state.products.length +
-                                (state.isLoadingMore ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index >= state.products.length) {
-                                return const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                );
-                              }
-
-                              final product = state.products[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: ProductCard(
-                                  product: product,
-                                  onTap: () => _onProductTap(context, product),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
+            ),
+            firstPageErrorIndicatorBuilder: (context) => _buildErrorState(
+              context,
+              _pagingController.error.toString(),
+              () => _pagingController.refresh(),
+            ),
+            newPageErrorIndicatorBuilder: (context) => _buildErrorState(
+              context,
+              _pagingController.error.toString(),
+              () => _pagingController.retryLastFailedRequest(),
+            ),
+            noItemsFoundIndicatorBuilder: (context) =>
+                _buildEmptyState(context),
+            firstPageProgressIndicatorBuilder: (context) =>
+                const Center(child: CircularProgressIndicator()),
+            newPageProgressIndicatorBuilder: (context) => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: CircularProgressIndicator(),
               ),
-            );
-          }
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-          return const SizedBox.shrink();
-        },
+  Widget _buildErrorState(
+    BuildContext context,
+    String error,
+    VoidCallback onRetry,
+  ) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            'Oops! Terjadi kesalahan',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error,
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Coba Lagi'),
+          ),
+        ],
       ),
     );
   }
