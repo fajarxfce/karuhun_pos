@@ -23,6 +23,15 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart'
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/login_usecase.dart' as _i188;
 import '../../features/auth/presentation/bloc/auth_bloc.dart' as _i797;
+import '../../features/product/data/datasources/product_remote_data_source.dart'
+    as _i1;
+import '../../features/product/data/repositories/product_repository_impl.dart'
+    as _i1040;
+import '../../features/product/domain/repositories/product_repository.dart'
+    as _i39;
+import '../../features/product/domain/usecases/get_products_usecase.dart'
+    as _i1035;
+import '../../features/product/presentation/bloc/product_bloc.dart' as _i415;
 import '../network/api_client.dart' as _i557;
 import '../network/auth_interceptor.dart' as _i908;
 import 'injection.dart' as _i464;
@@ -52,17 +61,32 @@ Future<_i174.GetIt> $initGetIt(
   gh.factory<_i107.AuthRemoteDataSource>(
     () => _i107.AuthRemoteDataSourceImpl(gh<_i557.ApiClient>()),
   );
+  gh.factory<_i1.ProductRemoteDataSource>(
+    () => _i1.ProductRemoteDataSourceImpl(gh<_i557.ApiClient>()),
+  );
   gh.factory<_i787.AuthRepository>(
     () => _i153.AuthRepositoryImpl(
       remoteDataSource: gh<_i107.AuthRemoteDataSource>(),
       localDataSource: gh<_i852.AuthLocalDataSource>(),
     ),
   );
+  gh.factory<_i39.ProductRepository>(
+    () => _i1040.ProductRepositoryImpl(
+      remoteDataSource: gh<_i1.ProductRemoteDataSource>(),
+    ),
+  );
   gh.factory<_i188.LoginUseCase>(
     () => _i188.LoginUseCase(gh<_i787.AuthRepository>()),
   );
+  gh.factory<_i1035.GetProductsUseCase>(
+    () => _i1035.GetProductsUseCase(gh<_i39.ProductRepository>()),
+  );
   gh.factory<_i797.AuthBloc>(
     () => _i797.AuthBloc(loginUseCase: gh<_i188.LoginUseCase>()),
+  );
+  gh.factory<_i415.ProductBloc>(
+    () =>
+        _i415.ProductBloc(getProductsUseCase: gh<_i1035.GetProductsUseCase>()),
   );
   return getIt;
 }

@@ -88,7 +88,7 @@ class DashboardPage extends StatelessWidget {
                     subtitle: 'Tambah & edit produk',
                     color: Colors.green,
                     onTap: () {
-                      // TODO: Navigate to product management
+                      context.push('/products');
                     },
                   ),
                   _buildQuickActionCard(
