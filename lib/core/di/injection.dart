@@ -31,6 +31,6 @@ abstract class RegisterModule {
   );
 
   @preResolve
-  Future<SharedPreferences> get sharedPreferences => 
+  Future<SharedPreferences> get sharedPreferences =>
       SharedPreferences.getInstance();
 }

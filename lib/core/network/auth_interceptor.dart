@@ -10,7 +10,10 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor(this.localDataSource);
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     // Skip adding token for login endpoint
     if (options.path.contains('/login') || options.path.contains('/register')) {
       handler.next(options);

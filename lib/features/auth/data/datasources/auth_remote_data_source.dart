@@ -7,10 +7,7 @@ import '../../../../core/network/api_client.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<UserModel> login({
-    required String email,
-    required String password,
-  });
+  Future<UserModel> login({required String email, required String password});
 
   Future<void> logout();
 }
@@ -29,25 +26,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await apiClient.post(
         '/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
 
       if (response.statusCode == 200) {
         final responseData = response.data;
-        
+
         // Debug print untuk melihat struktur response
         debugPrint('Login Response: $responseData');
-        
+
         if (responseData is Map<String, dynamic>) {
           // Check if response has code 200 and message Success
-          if (responseData['code'] == 200 && responseData['message'] == 'Success') {
+          if (responseData['code'] == 200 &&
+              responseData['message'] == 'Success') {
             final data = responseData['data'] as Map<String, dynamic>;
             final token = data['token'] as String;
             final tokenType = data['token_type'] as String?;
-            
+
             // Create user data with token information
             // Since API doesn't return user data, create minimal user object
             final userData = {
@@ -57,7 +52,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               'token': token,
               'token_type': tokenType ?? 'bearer',
             };
-            
+
             return UserModel.fromJson(userData);
           } else {
             // Not successful
@@ -74,32 +69,34 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      debugPrint('DioException caught: ${e.type}, Response: ${e.response?.data}');
-      
+      debugPrint(
+        'DioException caught: ${e.type}, Response: ${e.response?.data}',
+      );
+
       if (e.response != null) {
         final errorData = e.response!.data;
         String errorMessage = 'Login failed';
-        
+
         if (errorData is Map<String, dynamic>) {
           errorMessage = errorData['message'] ?? errorMessage;
-          
+
           // Handle validation errors
           if (errorData['errors'] != null) {
             final errors = errorData['errors'] as Map<String, dynamic>;
             final List<String> errorMessages = [];
-            
+
             errors.forEach((key, value) {
               if (value is List) {
                 errorMessages.addAll(value.cast<String>());
               }
             });
-            
+
             if (errorMessages.isNotEmpty) {
               errorMessage = errorMessages.join(', ');
             }
           }
         }
-        
+
         if (e.response!.statusCode == 401) {
           throw core_exceptions.UnauthorizedException(errorMessage);
         } else if (e.response!.statusCode == 422) {
@@ -129,7 +126,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       rethrow;
     } catch (e) {
       debugPrint('Unexpected error in login: $e');
-      throw core_exceptions.ServerException('Unexpected error occurred: ${e.toString()}');
+      throw core_exceptions.ServerException(
+        'Unexpected error occurred: ${e.toString()}',
+      );
     }
   }
 
@@ -139,14 +138,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await apiClient.post('/logout');
     } on DioException catch (e) {
       if (e.response != null) {
-        throw core_exceptions.ServerException(
-          'Logout failed',
-        );
+        throw core_exceptions.ServerException('Logout failed');
       } else {
         throw core_exceptions.NetworkException('No internet connection');
       }
     } catch (e) {
-      throw core_exceptions.ServerException('Unexpected error occurred: ${e.toString()}');
+      throw core_exceptions.ServerException(
+        'Unexpected error occurred: ${e.toString()}',
+      );
     }
   }
 }

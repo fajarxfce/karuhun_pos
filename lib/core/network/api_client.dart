@@ -44,7 +44,7 @@ class ApiClient {
           enabled: true,
           filter: (options, args) {
             // Don't log sensitive endpoints body
-            if (options.path.contains('/login') || 
+            if (options.path.contains('/login') ||
                 options.path.contains('/register')) {
               return false;
             }
@@ -57,18 +57,22 @@ class ApiClient {
       _dio.interceptors.add(
         InterceptorsWrapper(
           onRequest: (options, handler) {
-            debugPrint('🚀 REQUEST[${options.method}] => PATH: ${options.path}');
+            debugPrint(
+              '🚀 REQUEST[${options.method}] => PATH: ${options.path}',
+            );
             debugPrint('🚀 Headers: ${options.headers}');
-            if (options.data != null && 
-                !options.path.contains('/login') && 
+            if (options.data != null &&
+                !options.path.contains('/login') &&
                 !options.path.contains('/register')) {
               debugPrint('🚀 Body: ${options.data}');
             }
             handler.next(options);
           },
           onResponse: (response, handler) {
-            debugPrint('✅ RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}');
-            if (!response.requestOptions.path.contains('/login') && 
+            debugPrint(
+              '✅ RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}',
+            );
+            if (!response.requestOptions.path.contains('/login') &&
                 !response.requestOptions.path.contains('/register')) {
               debugPrint('✅ Data: ${response.data}');
             } else {
@@ -77,7 +81,9 @@ class ApiClient {
             handler.next(response);
           },
           onError: (DioException e, handler) {
-            debugPrint('❌ ERROR[${e.response?.statusCode}] => PATH: ${e.requestOptions.path}');
+            debugPrint(
+              '❌ ERROR[${e.response?.statusCode}] => PATH: ${e.requestOptions.path}',
+            );
             debugPrint('❌ Message: ${e.message}');
             if (e.response?.data != null) {
               debugPrint('❌ Error Data: ${e.response?.data}');
@@ -94,7 +100,7 @@ class ApiClient {
           // Add custom headers (if not already set by AuthInterceptor)
           options.headers['Accept'] = 'application/json';
           options.headers['Content-Type'] = 'application/json';
-          
+
           handler.next(options);
         },
         onResponse: (response, handler) {

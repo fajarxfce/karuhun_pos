@@ -24,14 +24,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    
+
     final result = await loginUseCase(
-      LoginParams(
-        email: event.email,
-        password: event.password,
-      ),
+      LoginParams(email: event.email, password: event.password),
     );
-    
+
     result.fold(
       (failure) => emit(AuthFailure(_mapFailureToMessage(failure))),
       (user) => emit(AuthSuccess(user: user)),
@@ -48,8 +45,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   String _mapFailureToMessage(Failure failure) {
-    debugPrint('Mapping failure: ${failure.runtimeType} - ${failure.toString()}');
-    
+    debugPrint(
+      'Mapping failure: ${failure.runtimeType} - ${failure.toString()}',
+    );
+
     if (failure is UnauthorizedFailure) {
       return 'Email atau password salah';
     } else if (failure is ValidationFailure) {
