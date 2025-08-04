@@ -43,12 +43,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             final token = data['token'] as String;
             final tokenType = data['token_type'] as String?;
 
-            // Create user data with token information
-            // Since API doesn't return user data, create minimal user object
             final userData = {
-              'id': 1, // Default user ID
-              'name': 'User', // Default name
-              'email': email, // Use provided email
+              'id': 1,
+              'name': 'User',
+              'email': email,
               'token': token,
               'token_type': tokenType ?? 'bearer',
             };

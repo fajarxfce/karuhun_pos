@@ -9,8 +9,8 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Karuhun POS Dashboard'),
-        centerTitle: true,
         elevation: 2,
+        centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -56,7 +56,7 @@ class DashboardPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Hari ini ${_getFormattedDate()}',
+                      '',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 16,
@@ -67,68 +67,6 @@ class DashboardPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Statistics cards
-            Text(
-              'Ringkasan Hari Ini',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.shopping_cart,
-                    title: 'Transaksi',
-                    value: '25',
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.attach_money,
-                    title: 'Pendapatan',
-                    value: 'Rp 2.5M',
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.inventory,
-                    title: 'Produk',
-                    value: '150',
-                    color: Colors.orange,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.people,
-                    title: 'Pelanggan',
-                    value: '18',
-                    color: Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Quick actions
-            Text(
-              'Aksi Cepat',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,

@@ -6,7 +6,6 @@ import 'core/router/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configure dependency injection
   await configureDependencies();
 
   runApp(const MyApp());
