@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../features/auth/data/datasources/auth_local_data_source.dart';
+import '../../features/auth/data/datasources/local/auth_local_data_source.dart';
 
 @injectable
 class AuthInterceptor extends Interceptor {

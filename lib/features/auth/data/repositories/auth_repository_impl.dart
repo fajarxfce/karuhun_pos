@@ -5,8 +5,8 @@ import '../../../../core/error/exceptions.dart' as core_exceptions;
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../datasources/auth_local_data_source.dart';
-import '../datasources/auth_remote_data_source.dart';
+import '../datasources/local/auth_local_data_source.dart';
+import '../datasources/remote/auth_remote_data_source.dart';
 
 @Injectable(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {

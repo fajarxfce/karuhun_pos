@@ -1,16 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
-
-import '../../../../core/error/exceptions.dart' as core_exceptions;
-import '../../../../core/network/api_client.dart';
-import '../models/user_model.dart';
-
-abstract class AuthRemoteDataSource {
-  Future<UserModel> login({required String email, required String password});
-
-  Future<void> logout();
-}
+import 'package:karuhun_pos/core/network/api_client.dart';
+import 'package:karuhun_pos/features/auth/data/datasources/remote/auth_remote_data_source.dart';
+import 'package:karuhun_pos/features/auth/data/models/user_model.dart';
+import '../../../../../core/error/exceptions.dart' as core_exceptions;
 
 @Injectable(as: AuthRemoteDataSource)
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {

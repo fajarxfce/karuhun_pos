@@ -1,17 +1,8 @@
 import 'package:injectable/injectable.dart';
+import 'package:karuhun_pos/features/auth/data/datasources/local/auth_local_data_source.dart';
+import 'package:karuhun_pos/features/auth/data/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../../core/error/exceptions.dart' as core_exceptions;
-import '../models/user_model.dart';
-
-abstract class AuthLocalDataSource {
-  Future<void> saveUser(UserModel user);
-  Future<UserModel?> getUser();
-  Future<void> clearUser();
-  Future<String?> getToken();
-  Future<void> saveToken(String token);
-  Future<void> clearToken();
-}
+import '../../../../../core/error/exceptions.dart' as core_exceptions;
 
 @Injectable(as: AuthLocalDataSource)
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
@@ -37,9 +28,6 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     try {
       final userString = sharedPreferences.getString(_userKey);
       if (userString != null) {
-        // Note: This is a simplified version. In a real app, you'd want to
-        // properly serialize/deserialize JSON
-        // For now, we'll return null to avoid JSON parsing issues
         return null;
       }
       return null;

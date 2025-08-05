@@ -14,10 +14,14 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
-import '../../features/auth/data/datasources/auth_local_data_source.dart'
-    as _i852;
-import '../../features/auth/data/datasources/auth_remote_data_source.dart'
-    as _i107;
+import '../../features/auth/data/datasources/local/auth_local_data_source.dart'
+    as _i835;
+import '../../features/auth/data/datasources/local/auth_local_data_source_impl.dart'
+    as _i497;
+import '../../features/auth/data/datasources/remote/auth_remote_data_source.dart'
+    as _i520;
+import '../../features/auth/data/datasources/remote/auth_remote_data_source_impl.dart'
+    as _i542;
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
@@ -52,25 +56,25 @@ Future<_i174.GetIt> init(
   );
   gh.factory<_i652.DashboardBloc>(() => _i652.DashboardBloc());
   gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
-  gh.factory<_i852.AuthLocalDataSource>(
-    () => _i852.AuthLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
+  gh.factory<_i835.AuthLocalDataSource>(
+    () => _i497.AuthLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
   );
   gh.factory<_i908.AuthInterceptor>(
-    () => _i908.AuthInterceptor(gh<_i852.AuthLocalDataSource>()),
+    () => _i908.AuthInterceptor(gh<_i835.AuthLocalDataSource>()),
   );
   gh.lazySingleton<_i557.ApiClient>(
     () => _i557.ApiClient(gh<_i361.Dio>(), gh<_i908.AuthInterceptor>()),
   );
-  gh.factory<_i107.AuthRemoteDataSource>(
-    () => _i107.AuthRemoteDataSourceImpl(gh<_i557.ApiClient>()),
-  );
   gh.factory<_i1.ProductRemoteDataSource>(
     () => _i1.ProductRemoteDataSourceImpl(gh<_i557.ApiClient>()),
   );
+  gh.factory<_i520.AuthRemoteDataSource>(
+    () => _i542.AuthRemoteDataSourceImpl(gh<_i557.ApiClient>()),
+  );
   gh.factory<_i787.AuthRepository>(
     () => _i153.AuthRepositoryImpl(
-      remoteDataSource: gh<_i107.AuthRemoteDataSource>(),
-      localDataSource: gh<_i852.AuthLocalDataSource>(),
+      remoteDataSource: gh<_i520.AuthRemoteDataSource>(),
+      localDataSource: gh<_i835.AuthLocalDataSource>(),
     ),
   );
   gh.factory<_i39.ProductRepository>(
