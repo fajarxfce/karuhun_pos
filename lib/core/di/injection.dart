@@ -9,11 +9,11 @@ import 'injection.config.dart';
 final getIt = GetIt.instance;
 
 @InjectableInit(
-  initializerName: r'$initGetIt',
+  initializerName: 'init',
   preferRelativeImports: true,
   asExtension: false,
 )
-Future<void> configureDependencies() async => await $initGetIt(getIt);
+Future<void> configureDependencies() async => await init(getIt);
 
 @module
 abstract class RegisterModule {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:karuhun_pos/designsystem/theme.dart';
-import 'package:karuhun_pos/designsystem/util.dart';
+import 'package:karuhun_pos/core/designsystem/theme.dart';
+import 'package:karuhun_pos/core/designsystem/util.dart';
 
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';

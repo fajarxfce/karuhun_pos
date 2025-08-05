@@ -23,6 +23,8 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart'
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/login_usecase.dart' as _i188;
 import '../../features/auth/presentation/bloc/auth_bloc.dart' as _i797;
+import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart'
+    as _i652;
 import '../../features/product/data/datasources/product_remote_data_source.dart'
     as _i1;
 import '../../features/product/data/repositories/product_repository_impl.dart'
@@ -37,7 +39,7 @@ import '../network/auth_interceptor.dart' as _i908;
 import 'injection.dart' as _i464;
 
 // initializes the registration of main-scope dependencies inside of GetIt
-Future<_i174.GetIt> $initGetIt(
+Future<_i174.GetIt> init(
   _i174.GetIt getIt, {
   String? environment,
   _i526.EnvironmentFilter? environmentFilter,
@@ -48,6 +50,7 @@ Future<_i174.GetIt> $initGetIt(
     () => registerModule.sharedPreferences,
     preResolve: true,
   );
+  gh.factory<_i652.DashboardBloc>(() => _i652.DashboardBloc());
   gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
   gh.factory<_i852.AuthLocalDataSource>(
     () => _i852.AuthLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
