@@ -32,35 +32,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (response.statusCode == 200) {
         final responseData = response.data;
 
-        // Debug print untuk melihat struktur response
         debugPrint('Login Response: $responseData');
 
-        if (responseData is Map<String, dynamic>) {
-          // Check if response has code 200 and message Success
-          if (responseData['code'] == 200 &&
-              responseData['message'] == 'Success') {
-            final data = responseData['data'] as Map<String, dynamic>;
-            final token = data['token'] as String;
-            final tokenType = data['token_type'] as String?;
+        final data = responseData['data'] as Map<String, dynamic>;
+        final token = data['token'] as String;
+        final tokenType = data['token_type'] as String?;
 
-            final userData = {
-              'id': 1,
-              'name': 'User',
-              'email': email,
-              'token': token,
-              'token_type': tokenType ?? 'bearer',
-            };
+        final userData = {
+          'id': 1,
+          'name': 'User',
+          'email': email,
+          'token': token,
+          'token_type': tokenType ?? 'bearer',
+        };
 
-            return UserModel.fromJson(userData);
-          } else {
-            // Not successful
-            final message = responseData['message'] ?? 'Login failed';
-            throw core_exceptions.ServerException(message);
-          }
-        } else {
-          // Response data is not a Map
-          throw core_exceptions.ServerException('Invalid response format');
-        }
+        return UserModel.fromJson(userData);
       } else {
         throw core_exceptions.ServerException(
           'Login failed with status code: ${response.statusCode}',
@@ -78,7 +64,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         if (errorData is Map<String, dynamic>) {
           errorMessage = errorData['message'] ?? errorMessage;
 
-          // Handle validation errors
           if (errorData['errors'] != null) {
             final errors = errorData['errors'] as Map<String, dynamic>;
             final List<String> errorMessages = [];

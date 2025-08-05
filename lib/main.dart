@@ -3,7 +3,7 @@ import 'package:karuhun_pos/core/designsystem/theme.dart';
 import 'package:karuhun_pos/core/designsystem/util.dart';
 
 import 'core/di/injection.dart';
-import 'core/router/app_router.dart';
+import 'router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

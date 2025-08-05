@@ -16,21 +16,16 @@ class ApiClient {
   }
 
   void _setupInterceptors() {
-    // Add performance monitoring first
     if (kDebugMode) {
       _dio.interceptors.add(PerformanceInterceptor());
     }
 
-    // Add rate limiting
     _dio.interceptors.add(RateLimitInterceptor());
 
-    // Add retry mechanism (pass Dio instance)
     _dio.interceptors.add(RetryInterceptor(_dio));
 
-    // Add auth interceptor
     _dio.interceptors.add(_authInterceptor);
 
-    // Add pretty logging interceptor (only in debug mode)
     if (kDebugMode) {
       _dio.interceptors.add(
         PrettyDioLogger(

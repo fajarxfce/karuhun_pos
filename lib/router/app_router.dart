@@ -1,7 +1,8 @@
 import 'package:go_router/go_router.dart';
-import 'package:karuhun_pos/features/auth/presentation/screen/login_screen.dart';
-import 'package:karuhun_pos/features/dashboard/presentation/screen/dashboard_screen.dart';
-import 'package:karuhun_pos/features/product/presentation/screen/product_list_screen.dart';
+
+import '../features/auth/presentation/screen/login_screen.dart';
+import '../features/dashboard/presentation/screen/dashboard_screen.dart';
+import '../features/product/presentation/screen/product_list_screen.dart';
 
 class AppRouter {
   static GoRouter get router => _router;
