@@ -6,14 +6,14 @@ import '../../domain/entities/product.dart';
 import '../../domain/usecases/get_products_usecase.dart';
 import '../widgets/product_card.dart';
 
-class ProductListPage extends StatefulWidget {
-  const ProductListPage({super.key});
+class ProductListScreen extends StatefulWidget {
+  const ProductListScreen({super.key});
 
   @override
-  State<ProductListPage> createState() => _ProductListPageState();
+  State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
-class _ProductListPageState extends State<ProductListPage> {
+class _ProductListScreenState extends State<ProductListScreen> {
   static const _pageSize = 10;
 
   final PagingController<int, Product> _pagingController = PagingController(
@@ -78,7 +78,6 @@ class _ProductListPageState extends State<ProductListPage> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // TODO: Navigate to add product page
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tambah produk - Coming soon!')),
               );
@@ -195,7 +194,6 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   void _onProductTap(BuildContext context, Product product) {
-    // TODO: Navigate to product detail page
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('Detail produk: ${product.name}')));

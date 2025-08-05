@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:karuhun_pos/designsystem/theme.dart';
+import 'package:karuhun_pos/designsystem/util.dart';
 
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
@@ -16,28 +18,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = View.of(context).platformDispatcher.platformBrightness;
+
+    // Retrieves the default theme for the platform
+    //TextTheme textTheme = Theme.of(context).textTheme;
+
+    // Use with Google Fonts package to use downloadable fonts
+    TextTheme textTheme = createTextTheme(context, "Roboto", "Outfit");
+
+    MaterialTheme theme = MaterialTheme(textTheme);
+
     return MaterialApp.router(
       title: 'Karuhun POS',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            elevation: 2,
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-          ),
-        ),
-        cardTheme: CardThemeData(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
+      theme: brightness == Brightness.light ? theme.light() : theme.dark(),
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
     );

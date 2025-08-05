@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+class DashboardScreen extends StatelessWidget {
+  const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -208,25 +208,6 @@ class DashboardPage extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getFormattedDate() {
-    final now = DateTime.now();
-    final months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    return '${now.day} ${months[now.month - 1]} ${now.year}';
   }
 
   void _showLogoutDialog(BuildContext context) {
