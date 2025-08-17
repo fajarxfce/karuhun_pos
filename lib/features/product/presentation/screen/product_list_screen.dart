@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
+import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/usecases/get_products_usecase.dart';
@@ -13,7 +14,36 @@ class ProductListScreen extends StatefulWidget {
   State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
+class ProductListView extends StatefulWidget {
+  const ProductListView({super.key});
+
+  @override
+  State<ProductListView> createState() => _ProductListViewState();
+}
+
 class _ProductListScreenState extends State<ProductListScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Daftar Produk'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tambah produk - Coming soon!')),
+              );
+            },
+          ),
+        ],
+      ),
+      body: const ProductListView(),
+    );
+  }
+}
+
+class _ProductListViewState extends State<ProductListView> {
   static const _pageSize = 10;
 
   final PagingController<int, Product> _pagingController = PagingController(
@@ -194,8 +224,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   void _onProductTap(BuildContext context, Product product) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Detail produk: ${product.name}')));
+    context.pushNamed(
+      'product-detail',
+      pathParameters: {'id': product.id.toString()},
+      extra: product,
+    );
   }
 }

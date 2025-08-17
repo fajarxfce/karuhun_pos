@@ -20,7 +20,7 @@ abstract class RegisterModule {
   @lazySingleton
   Dio get dio => Dio(
     BaseOptions(
-      baseUrl: 'http://192.168.1.19:8000/api/v1',
+      baseUrl: 'http://192.168.0.130:8000/api/v1',
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 3),
       headers: {

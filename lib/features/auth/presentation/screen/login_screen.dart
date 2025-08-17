@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
 import '../bloc/auth_bloc.dart';
@@ -41,8 +42,14 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is AuthSuccess) {
+            // Save login status
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('is_logged_in', true);
+
+            if (!context.mounted) return;
+
             // Show success message with user name
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -50,8 +57,10 @@ class _LoginViewState extends State<LoginView> {
                 backgroundColor: Colors.green,
               ),
             );
-            context.go('/dashboard');
+            context.go('/main');
           } else if (state is AuthFailure) {
+            if (!context.mounted) return;
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
