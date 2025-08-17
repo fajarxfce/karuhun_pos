@@ -1,4 +1,5 @@
 import '../features/product/domain/entities/product.dart';
+import '../main.dart' show rootNavigatorKey;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,7 @@ class AppRouter {
   static GoRouter get router => _router;
 
   static final _router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     redirect: (context, state) async {
       final prefs = await SharedPreferences.getInstance();

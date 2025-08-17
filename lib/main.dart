@@ -1,33 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:karuhun_pos/core/designsystem/theme.dart';
 import 'package:karuhun_pos/core/designsystem/util.dart';
-
 import 'core/di/injection.dart';
 import 'router/app_router.dart';
+import 'core/services/auth_session_service.dart';
+
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await configureDependencies();
-
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    AuthSessionService.instance.onSessionExpired.listen((_) async {
+      final ctx = rootNavigatorKey.currentContext;
+      if (ctx != null) {
+        showDialog(
+          context: ctx,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Session Expired'),
+            content: const Text(
+              'Sesi login Anda telah berakhir. Silakan login kembali.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(
+                    ctx,
+                    rootNavigator: true,
+                  ).popUntil((route) => route.isFirst);
+                  AppRouter.router.go('/login');
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final brightness = View.of(context).platformDispatcher.platformBrightness;
-
-    // Retrieves the default theme for the platform
-    //TextTheme textTheme = Theme.of(context).textTheme;
-
-    // Use with Google Fonts package to use downloadable fonts
     TextTheme textTheme = createTextTheme(context, "Roboto", "Outfit");
-
     MaterialTheme theme = MaterialTheme(textTheme);
-
     return MaterialApp.router(
       title: 'Karuhun POS',
       theme: brightness == Brightness.light ? theme.light() : theme.dark(),

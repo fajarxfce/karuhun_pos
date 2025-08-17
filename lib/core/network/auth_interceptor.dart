@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../features/auth/data/datasources/local/auth_local_data_source.dart';
+import '../services/auth_session_service.dart';
 
 @injectable
 class AuthInterceptor extends Interceptor {
@@ -47,8 +48,7 @@ class AuthInterceptor extends Interceptor {
     try {
       await localDataSource.clearToken();
       await localDataSource.clearUser();
-      // You could also trigger a logout event here
-      // getIt<AuthBloc>().add(LogoutRequested());
+      AuthSessionService.instance.sessionExpired();
     } catch (e) {
       // Handle error
     }
