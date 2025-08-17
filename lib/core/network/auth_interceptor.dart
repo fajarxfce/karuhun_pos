@@ -35,12 +35,13 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    // Handle 401 unauthorized responses
+    // Handle 401 unauthorized responses, but skip for login/register endpoints
     if (err.response?.statusCode == 401) {
-      // Clear stored token and redirect to login
-      _handleUnauthorized();
+      final path = err.requestOptions.path;
+      if (!(path.contains('/login') || path.contains('/register'))) {
+        _handleUnauthorized();
+      }
     }
-
     handler.next(err);
   }
 
