@@ -8,6 +8,7 @@ import '../../../dashboard/presentation/screen/dashboard_screen.dart';
 import '../../../product/presentation/bloc/product_bloc.dart';
 import '../../../product/presentation/screen/product_list_screen.dart';
 import '../../../transaction-history/presentation/screen/transaction-history-screen.dart';
+import '../../../document/presentation/screen/document_directory_screen.dart';
 import '../bloc/navigation_bloc.dart';
 
 class MainScreen extends StatelessWidget {
@@ -52,6 +53,7 @@ class _MainViewState extends State<MainView> {
               DashboardView(),
               ProductListView(),
               TransactionHistoryView(),
+              DocumentDirectoryScreen(),
             ],
           );
         },
@@ -80,6 +82,10 @@ class _MainViewState extends State<MainView> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.history),
                 label: 'Riwayat',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.folder),
+                label: 'Dokumen',
               ),
             ],
           );

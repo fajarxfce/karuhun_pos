@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:karuhun_pos/core/network/api_client.dart';
@@ -47,9 +48,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      debugPrint(
-        'DioException caught: ${e.type}, Response: ${e.response?.data}',
-      );
+      debugPrint('DioException caught: ${e.type}, Response: ${e.response}');
 
       if (e.response != null) {
         final errorData = e.response!.data;
@@ -72,6 +71,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               errorMessage = errorMessages.join(', ');
             }
           }
+        } else if (errorData is String) {
+          errorMessage = errorData;
         }
 
         if (e.response!.statusCode == 401) {
@@ -82,15 +83,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           throw core_exceptions.ServerException(errorMessage);
         }
       } else {
-        // No response means network error
-        if (e.type == DioExceptionType.connectionTimeout ||
-            e.type == DioExceptionType.sendTimeout ||
-            e.type == DioExceptionType.receiveTimeout) {
-          throw core_exceptions.NetworkException('Connection timeout');
-        } else if (e.type == DioExceptionType.connectionError) {
-          throw core_exceptions.NetworkException('No internet connection');
-        } else {
-          throw core_exceptions.NetworkException('Network error occurred');
+        // No response means network or unknown error
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            throw core_exceptions.NetworkException('Connection timeout');
+          case DioExceptionType.connectionError:
+            throw core_exceptions.NetworkException('No internet connection');
+          case DioExceptionType.badCertificate:
+            throw core_exceptions.NetworkException(
+              'Bad certificate or SSL error',
+            );
+          case DioExceptionType.unknown:
+            // Try to get root cause from DioException
+            final error = e.error;
+            if (error is SocketException) {
+              throw core_exceptions.NetworkException('No internet connection');
+            } else if (error is FormatException) {
+              throw core_exceptions.ServerException('Invalid response format');
+            } else {
+              throw core_exceptions.NetworkException(
+                'Unexpected network error: ${error?.toString() ?? 'Unknown error'}',
+              );
+            }
+          default:
+            throw core_exceptions.NetworkException('Network error occurred');
         }
       }
     } on core_exceptions.ServerException {

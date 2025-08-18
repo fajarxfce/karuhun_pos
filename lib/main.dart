@@ -4,7 +4,7 @@ import 'package:karuhun_pos/core/designsystem/util.dart';
 import 'core/di/injection.dart';
 import 'router/app_router.dart';
 import 'core/services/auth_session_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'core/services/session_manager.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -44,9 +44,7 @@ class _MyAppState extends State<MyApp> {
         actions: [
           TextButton(
             onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('is_logged_in');
-              await prefs.remove('token');
+              await SessionManager.instance.clearSession();
               Navigator.of(
                 ctx,
                 rootNavigator: true,
