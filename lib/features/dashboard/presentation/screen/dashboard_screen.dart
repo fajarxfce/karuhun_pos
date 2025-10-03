@@ -137,7 +137,7 @@ class DashboardView extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   SizedBox(
-                    height: 250,
+                    height: 350,
                     child: GridView.count(
                       crossAxisCount: 2,
                       crossAxisSpacing: 12,
@@ -158,6 +158,15 @@ class DashboardView extends StatelessWidget {
                           color: Colors.green,
                           onTap: () {
                             context.push('/products');
+                          },
+                        ),
+                        _buildQuickActionCard(
+                          icon: Icons.add_box,
+                          title: 'Daftar Produk',
+                          subtitle: 'Reactive form demo',
+                          color: Colors.purple,
+                          onTap: () {
+                            context.push('/product-registration');
                           },
                         ),
                         _buildQuickActionCard(

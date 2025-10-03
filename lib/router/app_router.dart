@@ -10,6 +10,7 @@ import '../features/main/presentation/screen/main_screen.dart';
 import '../features/onboarding/presentation/screen/onboarding-screen.dart';
 import '../features/product/presentation/screen/product_list_screen.dart';
 import '../features/product/presentation/screen/product_detail_screen.dart';
+import '../features/product-registration/product_registration_wrapper.dart';
 
 class AppRouter {
   static GoRouter get router => _router;
@@ -45,7 +46,7 @@ class AppRouter {
       GoRoute(
         path: '/onboarding',
         name: 'onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        builder: (context, state) => const ProductRegistrationWrapper(),
       ),
       GoRoute(
         path: '/login',
@@ -55,7 +56,7 @@ class AppRouter {
       GoRoute(
         path: '/main',
         name: 'main',
-        builder: (context, state) => const MainScreen(),
+        builder: (context, state) => const ProductRegistrationWrapper(),
       ),
       // Legacy routes for backward compatibility
       GoRoute(
@@ -80,6 +81,11 @@ class AppRouter {
           }
           return ProductDetailScreen(product: product as Product);
         },
+      ),
+      GoRoute(
+        path: '/product-registration',
+        name: 'product-registration',
+        builder: (context, state) => const ProductRegistrationWrapper(),
       ),
     ],
   );
