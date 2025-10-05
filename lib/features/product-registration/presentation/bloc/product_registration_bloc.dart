@@ -58,7 +58,7 @@ class ProductRegistrationBloc
   ) async {
     print('🔥 LoadCategories started');
     final currentData = _getCurrentDataOrInitial();
-    
+
     // Set loading flag instead of separate loading state
     emit(currentData.copyWith(isLoadingCategories: true));
 
@@ -120,7 +120,7 @@ class ProductRegistrationBloc
   ) async {
     final currentData = _getCurrentDataOrInitial();
 
-    // Set loading suppliers flag instead of separate loading state  
+    // Set loading suppliers flag instead of separate loading state
     emit(currentData.copyWith(isLoadingSuppliers: true));
 
     final result = await getSuppliersByCategory(event.categoryId);
@@ -128,10 +128,9 @@ class ProductRegistrationBloc
       (failure) =>
           emit(ProductRegistrationSuppliersLoadError(failure.toString())),
       (suppliers) {
-        emit(currentData.copyWith(
-          suppliers: suppliers,
-          isLoadingSuppliers: false,
-        ));
+        emit(
+          currentData.copyWith(suppliers: suppliers, isLoadingSuppliers: false),
+        );
       },
     );
   }

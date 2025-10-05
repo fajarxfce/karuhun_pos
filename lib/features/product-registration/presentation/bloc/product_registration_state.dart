@@ -141,7 +141,7 @@ class ProductRegistrationData extends ProductRegistrationState {
   final Category? selectedCategory;
   final Supplier? selectedSupplier;
   final bool isSubmitting;
-  
+
   // 🔥 Granular loading states
   final bool isLoadingCategories;
   final bool isLoadingSuppliers;

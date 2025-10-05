@@ -97,13 +97,6 @@ class _ProductRegistrationPageState extends State<ProductRegistrationPage> {
         },
         child: BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
           builder: (context, state) {
-            // 🔥 DEBUG: Print state untuk debugging
-            print('🐛 Current State: $state');
-            if (state is ProductRegistrationData) {
-              print('🐛 Categories count: ${state.categories.length}');
-              print('🐛 Suppliers count: ${state.suppliers.length}');
-            }
-
             return switch (state) {
               ProductRegistrationInitial() => _buildInitialView(context),
               ProductRegistrationLoading(:final message) => _buildLoadingView(
@@ -384,14 +377,6 @@ class CategoryDropdown extends StatelessWidget {
       builder: (context, data) {
         final (selectedCategory, categories, errorText) = data;
 
-        // 🔥 DEBUG: Print categories untuk debugging
-        print('🐛 CategoryDropdown - Categories count: ${categories.length}');
-        if (categories.isNotEmpty) {
-          print(
-            '🐛 CategoryDropdown - First category: ${categories.first.name}',
-          );
-        }
-
         return CustomDropdown<Category>(
           label: 'Category',
           value: selectedCategory,
@@ -490,18 +475,20 @@ class SupplierDropdown extends StatelessWidget {
         return (null, [], false, null, false);
       },
       builder: (context, data) {
-        final (selectedSupplier, suppliers, canSelectSupplier, errorText, isLoadingSuppliers) =
-            data;
+        final (
+          selectedSupplier,
+          suppliers,
+          canSelectSupplier,
+          errorText,
+          isLoadingSuppliers,
+        ) = data;
 
         // Show loading spinner if loading suppliers
         if (isLoadingSuppliers) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Supplier',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text('Supplier', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               Container(
                 height: 56,
