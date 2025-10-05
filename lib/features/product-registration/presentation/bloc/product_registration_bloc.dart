@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/entities/product.dart';
+import '../../domain/entities/product.dart' as domain;
 import '../../domain/usecases/get_categories.dart';
 import '../../domain/usecases/get_suppliers_by_category.dart';
 import '../../domain/usecases/upload_image.dart';
@@ -57,7 +57,10 @@ class ProductRegistrationBloc
     Emitter<ProductRegistrationState> emit,
   ) async {
     print('🔥 LoadCategories started');
-    emit(const ProductRegistrationLoading(message: 'Loading categories...'));
+    final currentData = _getCurrentDataOrInitial();
+    
+    // Set loading flag instead of separate loading state
+    emit(currentData.copyWith(isLoadingCategories: true));
 
     final result = await getCategories();
     result.fold(
@@ -67,10 +70,11 @@ class ProductRegistrationBloc
       },
       (categories) {
         print('✅ Categories loaded: ${categories.length} items');
-        // Always create new data state with categories
+        // Update categories and stop loading
         emit(
-          ProductRegistrationInitial.initialData().copyWith(
+          currentData.copyWith(
             categories: categories,
+            isLoadingCategories: false,
           ),
         );
       },
@@ -116,14 +120,18 @@ class ProductRegistrationBloc
   ) async {
     final currentData = _getCurrentDataOrInitial();
 
-    emit(const ProductRegistrationLoading(message: 'Loading suppliers...'));
+    // Set loading suppliers flag instead of separate loading state  
+    emit(currentData.copyWith(isLoadingSuppliers: true));
 
     final result = await getSuppliersByCategory(event.categoryId);
     result.fold(
       (failure) =>
           emit(ProductRegistrationSuppliersLoadError(failure.toString())),
       (suppliers) {
-        emit(currentData.copyWith(suppliers: suppliers));
+        emit(currentData.copyWith(
+          suppliers: suppliers,
+          isLoadingSuppliers: false,
+        ));
       },
     );
   }
@@ -376,7 +384,7 @@ class ProductRegistrationBloc
 
     emit(currentData.copyWith(isSubmitting: true));
 
-    final product = Product(
+    final product = domain.Product(
       name: currentData.formData.name,
       description: currentData.formData.description,
       barcode: currentData.formData.barcode,
@@ -402,6 +410,22 @@ class ProductRegistrationBloc
   }
 
   void _onResetForm(ResetForm event, Emitter<ProductRegistrationState> emit) {
-    emit(const ProductRegistrationInitial());
+    final currentData = _getCurrentDataOrInitial();
+
+    // Reset form data but keep categories/suppliers
+    emit(
+      currentData.copyWith(
+        formData: const ProductFormData(
+          name: '',
+          description: '',
+          barcode: '',
+          selectedImages: [],
+          uploadedImageUrls: [],
+          validationErrors: {},
+        ),
+        selectedCategory: null,
+        selectedSupplier: null,
+      ),
+    );
   }
 }

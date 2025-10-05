@@ -114,6 +114,9 @@ class ProductRegistrationInitial extends ProductRegistrationState {
       ),
       categories: [],
       suppliers: [],
+      isLoadingCategories: false,
+      isLoadingSuppliers: false,
+      isUploadingImage: false,
     );
   }
 
@@ -138,6 +141,11 @@ class ProductRegistrationData extends ProductRegistrationState {
   final Category? selectedCategory;
   final Supplier? selectedSupplier;
   final bool isSubmitting;
+  
+  // 🔥 Granular loading states
+  final bool isLoadingCategories;
+  final bool isLoadingSuppliers;
+  final bool isUploadingImage;
 
   const ProductRegistrationData({
     required this.formData,
@@ -146,6 +154,9 @@ class ProductRegistrationData extends ProductRegistrationState {
     this.selectedCategory,
     this.selectedSupplier,
     this.isSubmitting = false,
+    this.isLoadingCategories = false,
+    this.isLoadingSuppliers = false,
+    this.isUploadingImage = false,
   });
 
   // Helper methods for reactive UI
@@ -169,6 +180,9 @@ class ProductRegistrationData extends ProductRegistrationState {
     Category? selectedCategory,
     Supplier? selectedSupplier,
     bool? isSubmitting,
+    bool? isLoadingCategories,
+    bool? isLoadingSuppliers,
+    bool? isUploadingImage,
   }) {
     return ProductRegistrationData(
       formData: formData ?? this.formData,
@@ -177,6 +191,9 @@ class ProductRegistrationData extends ProductRegistrationState {
       selectedCategory: selectedCategory ?? this.selectedCategory,
       selectedSupplier: selectedSupplier ?? this.selectedSupplier,
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      isLoadingCategories: isLoadingCategories ?? this.isLoadingCategories,
+      isLoadingSuppliers: isLoadingSuppliers ?? this.isLoadingSuppliers,
+      isUploadingImage: isUploadingImage ?? this.isUploadingImage,
     );
   }
 
@@ -188,6 +205,9 @@ class ProductRegistrationData extends ProductRegistrationState {
     selectedCategory,
     selectedSupplier,
     isSubmitting,
+    isLoadingCategories,
+    isLoadingSuppliers,
+    isUploadingImage,
   ];
 }
 

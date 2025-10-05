@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/category.dart';
@@ -9,8 +11,21 @@ import '../widgets/custom_form_field.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/product_image_picker.dart';
 
-class ProductRegistrationPage extends StatelessWidget {
+class ProductRegistrationPage extends StatefulWidget {
   const ProductRegistrationPage({Key? key}) : super(key: key);
+
+  @override
+  State<ProductRegistrationPage> createState() =>
+      _ProductRegistrationPageState();
+}
+
+class _ProductRegistrationPageState extends State<ProductRegistrationPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Load categories when page first loads
+    context.read<ProductRegistrationBloc>().add(const LoadCategories());
+  }
 
   void _showErrorSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -71,10 +86,9 @@ class ProductRegistrationPage extends StatelessWidget {
               _showErrorSnackBar(context, 'Validation failed: $message');
 
             case ProductRegistrationInitial():
-              // Load categories on initial state
-              context.read<ProductRegistrationBloc>().add(
-                const LoadCategories(),
-              );
+              // Only load categories once when first entering the page
+              // Avoid infinite loop by not loading on reset
+              break;
 
             // No action needed for data and loading states
             case ProductRegistrationData() || ProductRegistrationLoading():
@@ -83,6 +97,13 @@ class ProductRegistrationPage extends StatelessWidget {
         },
         child: BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
           builder: (context, state) {
+            // 🔥 DEBUG: Print state untuk debugging
+            print('🐛 Current State: $state');
+            if (state is ProductRegistrationData) {
+              print('🐛 Categories count: ${state.categories.length}');
+              print('🐛 Suppliers count: ${state.suppliers.length}');
+            }
+
             return switch (state) {
               ProductRegistrationInitial() => _buildInitialView(context),
               ProductRegistrationLoading(:final message) => _buildLoadingView(
@@ -231,38 +252,35 @@ class ProductRegistrationForm extends StatelessWidget {
   }
 }
 
-// 🔥 Clean field widgets with BlocBuilder pattern
+// 🔥 Clean field widgets with BlocSelector pattern (observes 2 values with Record)
 class ProductNameField extends StatelessWidget {
   const ProductNameField({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        // Only rebuild for data states when THIS field's data changes
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          final nameChanged = previous.formData.name != current.formData.name;
-          final nameErrorChanged =
-              previous.formData.validationErrors['name'] !=
-              current.formData.validationErrors['name'];
-          return nameChanged || nameErrorChanged;
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (String, String?)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (state.formData.name, state.formData.validationErrors['name']);
         }
-        return previous.runtimeType != current.runtimeType;
+        return ('', null);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(:final formData) => CustomFormField(
-            label: 'Product Name',
-            value: formData.name,
-            onChanged: (value) =>
-                context.read<ProductRegistrationBloc>().add(NameChanged(value)),
-            hintText: 'Enter product name',
-            errorText: formData.validationErrors['name'],
-            required: true,
-          ),
-          _ => const SizedBox.shrink(),
-        };
+      builder: (context, data) {
+        final (name, errorText) = data;
+
+        return CustomFormField(
+          label: 'Product Name',
+          value: name,
+          onChanged: (value) =>
+              context.read<ProductRegistrationBloc>().add(NameChanged(value)),
+          hintText: 'Enter product name',
+          errorText: errorText,
+          required: true,
+        );
       },
     );
   }
@@ -273,34 +291,34 @@ class ProductDescriptionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          final descChanged =
-              previous.formData.description != current.formData.description;
-          final descErrorChanged =
-              previous.formData.validationErrors['description'] !=
-              current.formData.validationErrors['description'];
-          return descChanged || descErrorChanged;
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (String, String?)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (
+            state.formData.description,
+            state.formData.validationErrors['description'],
+          );
         }
-        return previous.runtimeType != current.runtimeType;
+        return ('', null);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(:final formData) => CustomFormField(
-            label: 'Description',
-            value: formData.description,
-            onChanged: (value) => context.read<ProductRegistrationBloc>().add(
-              DescriptionChanged(value),
-            ),
-            hintText: 'Enter product description',
-            errorText: formData.validationErrors['description'],
-            maxLines: 3,
-            required: true,
+      builder: (context, data) {
+        final (description, errorText) = data;
+
+        return CustomFormField(
+          label: 'Description',
+          value: description,
+          onChanged: (value) => context.read<ProductRegistrationBloc>().add(
+            DescriptionChanged(value),
           ),
-          _ => const SizedBox.shrink(),
-        };
+          hintText: 'Enter product description',
+          errorText: errorText,
+          maxLines: 3,
+          required: true,
+        );
       },
     );
   }
@@ -311,33 +329,33 @@ class ProductBarcodeField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          final barcodeChanged =
-              previous.formData.barcode != current.formData.barcode;
-          final barcodeErrorChanged =
-              previous.formData.validationErrors['barcode'] !=
-              current.formData.validationErrors['barcode'];
-          return barcodeChanged || barcodeErrorChanged;
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (String, String?)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (
+            state.formData.barcode,
+            state.formData.validationErrors['barcode'],
+          );
         }
-        return previous.runtimeType != current.runtimeType;
+        return ('', null);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(:final formData) => CustomFormField(
-            label: 'Barcode',
-            value: formData.barcode,
-            onChanged: (value) => context.read<ProductRegistrationBloc>().add(
-              BarcodeChanged(value),
-            ),
-            hintText: 'Enter or scan barcode',
-            errorText: formData.validationErrors['barcode'],
-            required: true,
+      builder: (context, data) {
+        final (barcode, errorText) = data;
+
+        return CustomFormField(
+          label: 'Barcode',
+          value: barcode,
+          onChanged: (value) => context.read<ProductRegistrationBloc>().add(
+            BarcodeChanged(value),
           ),
-          _ => const SizedBox.shrink(),
-        };
+          hintText: 'Enter or scan barcode',
+          errorText: errorText,
+          required: true,
+        );
       },
     );
   }
@@ -348,45 +366,48 @@ class CategoryDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          final categoryChanged =
-              previous.selectedCategory != current.selectedCategory;
-          final categoriesChanged = previous.categories != current.categories;
-          final categoryErrorChanged =
-              previous.formData.validationErrors['category'] !=
-              current.formData.validationErrors['category'];
-          return categoryChanged || categoriesChanged || categoryErrorChanged;
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (Category?, List<Category>, String?)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (
+            state.selectedCategory,
+            state.categories,
+            state.formData.validationErrors['category'],
+          );
         }
-        return previous.runtimeType != current.runtimeType;
+        return (null, [], null);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(
-            :final selectedCategory,
-            :final categories,
-            :final formData,
-          ) =>
-            CustomDropdown<Category>(
-              label: 'Category',
-              value: selectedCategory,
-              items: categories,
-              onChanged: (category) {
-                if (category != null) {
-                  context.read<ProductRegistrationBloc>().add(
-                    CategorySelected(category.id),
-                  );
-                }
-              },
-              itemLabel: (category) => category.name,
-              hintText: 'Select a category',
-              errorText: formData.validationErrors['category'],
-              required: true,
-            ),
-          _ => const SizedBox.shrink(),
-        };
+      builder: (context, data) {
+        final (selectedCategory, categories, errorText) = data;
+
+        // 🔥 DEBUG: Print categories untuk debugging
+        print('🐛 CategoryDropdown - Categories count: ${categories.length}');
+        if (categories.isNotEmpty) {
+          print(
+            '🐛 CategoryDropdown - First category: ${categories.first.name}',
+          );
+        }
+
+        return CustomDropdown<Category>(
+          label: 'Category',
+          value: selectedCategory,
+          items: categories,
+          onChanged: (category) {
+            if (category != null) {
+              context.read<ProductRegistrationBloc>().add(
+                CategorySelected(category.id),
+              );
+            }
+          },
+          itemLabel: (category) => category.name,
+          hintText: 'Select a category',
+          errorText: errorText,
+          required: true,
+        );
       },
     );
   }
@@ -397,48 +418,50 @@ class CategoryInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          return previous.selectedCategory != current.selectedCategory;
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (Category?, List<String>, double?)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (state.selectedCategory, state.allowedUnits, state.taxRate);
         }
-        return previous.runtimeType != current.runtimeType;
+        return (null, [], null);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(:final selectedCategory)
-              when selectedCategory != null =>
-            Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
+      builder: (context, data) {
+        final (selectedCategory, allowedUnits, taxRate) = data;
+
+        if (selectedCategory == null) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.blue.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Category Requirements:',
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Category Requirements:',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 4),
-                  if (selectedCategory.requiresWeight)
-                    const Text('• Weight is required'),
-                  if (selectedCategory.requiresExpiry)
-                    const Text('• Expiry date is required'),
-                  Text('• Allowed units: ${state.allowedUnits.join(", ")}'),
-                  if (state.taxRate != null)
-                    Text(
-                      '• Tax rate: ${(state.taxRate! * 100).toStringAsFixed(1)}%',
-                    ),
-                ],
-              ),
-            ),
-          _ => const SizedBox.shrink(),
-        };
+              const SizedBox(height: 4),
+              if (selectedCategory.requiresWeight)
+                const Text('• Weight is required'),
+              if (selectedCategory.requiresExpiry)
+                const Text('• Expiry date is required'),
+              Text('• Allowed units: ${allowedUnits.join(", ")}'),
+              if (taxRate != null)
+                Text('• Tax rate: ${(taxRate * 100).toStringAsFixed(1)}%'),
+            ],
+          ),
+        );
       },
     );
   }
@@ -449,46 +472,81 @@ class SupplierDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          return previous.selectedSupplier != current.selectedSupplier ||
-              previous.suppliers != current.suppliers ||
-              previous.canSelectSupplier != current.canSelectSupplier ||
-              previous.formData.validationErrors['supplier'] !=
-                  current.formData.validationErrors['supplier'];
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (Supplier?, List<Supplier>, bool, String?, bool)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (
+            state.selectedSupplier,
+            state.suppliers,
+            state.canSelectSupplier,
+            state.formData.validationErrors['supplier'],
+            state.isLoadingSuppliers, // 🔥 Add loading flag
+          );
         }
-        return previous.runtimeType != current.runtimeType;
+        return (null, [], false, null, false);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(
-            :final selectedSupplier,
-            :final suppliers,
-            :final formData,
-            :final canSelectSupplier,
-          ) =>
-            CustomDropdown<Supplier>(
-              label: 'Supplier',
-              value: selectedSupplier,
-              items: suppliers,
-              onChanged: (supplier) {
-                if (supplier != null) {
-                  context.read<ProductRegistrationBloc>().add(
-                    SupplierSelected(supplier.id),
-                  );
-                }
-              },
-              itemLabel: (supplier) => supplier.name,
-              hintText: canSelectSupplier
-                  ? 'Select a supplier'
-                  : 'Select category first',
-              errorText: formData.validationErrors['supplier'],
-              required: true,
-            ),
-          _ => const SizedBox.shrink(),
-        };
+      builder: (context, data) {
+        final (selectedSupplier, suppliers, canSelectSupplier, errorText, isLoadingSuppliers) =
+            data;
+
+        // Show loading spinner if loading suppliers
+        if (isLoadingSuppliers) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Supplier',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Loading suppliers...'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          );
+        }
+
+        return CustomDropdown<Supplier>(
+          label: 'Supplier',
+          value: selectedSupplier,
+          items: suppliers,
+          onChanged: (supplier) {
+            if (supplier != null) {
+              context.read<ProductRegistrationBloc>().add(
+                SupplierSelected(supplier.id),
+              );
+            }
+          },
+          itemLabel: (supplier) => supplier.name,
+          hintText: canSelectSupplier
+              ? 'Select a supplier'
+              : 'Select category first',
+          errorText: errorText,
+          required: true,
+        );
       },
     );
   }
@@ -499,46 +557,48 @@ class SupplierInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          return previous.selectedSupplier != current.selectedSupplier;
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (Supplier?, double?)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (state.selectedSupplier, state.supplierDiscountRate);
         }
-        return previous.runtimeType != current.runtimeType;
+        return (null, null);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(:final selectedSupplier)
-              when selectedSupplier != null =>
-            Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade200),
+      builder: (context, data) {
+        final (selectedSupplier, discountRate) = data;
+
+        if (selectedSupplier == null) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.green.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Supplier Information:',
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Supplier Information:',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text('• ${selectedSupplier.name}'),
-                  Text('• ${selectedSupplier.email}'),
-                  Text('• ${selectedSupplier.phone}'),
-                  if (state.supplierDiscountRate != null)
-                    Text(
-                      '• Discount: ${(state.supplierDiscountRate! * 100).toStringAsFixed(1)}%',
-                    ),
-                ],
-              ),
-            ),
-          _ => const SizedBox.shrink(),
-        };
+              const SizedBox(height: 4),
+              Text('• ${selectedSupplier.name}'),
+              Text('• ${selectedSupplier.email}'),
+              Text('• ${selectedSupplier.phone}'),
+              if (discountRate != null)
+                Text('• Discount: ${(discountRate * 100).toStringAsFixed(1)}%'),
+            ],
+          ),
+        );
       },
     );
   }
@@ -549,32 +609,34 @@ class ProductPriceField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          return previous.formData.price != current.formData.price ||
-              previous.formData.validationErrors['price'] !=
-                  current.formData.validationErrors['price'];
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (String, String?)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (
+            state.formData.price?.toString() ?? '',
+            state.formData.validationErrors['price'],
+          );
         }
-        return previous.runtimeType != current.runtimeType;
+        return ('', null);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(:final formData) => CustomFormField(
-            label: 'Price',
-            value: formData.price?.toString() ?? '',
-            onChanged: (value) => context.read<ProductRegistrationBloc>().add(
-              PriceChanged(value),
-            ),
-            hintText: 'Enter price',
-            errorText: formData.validationErrors['price'],
-            keyboardType: TextInputType.number,
-            required: true,
-            suffix: const Text('IDR'),
-          ),
-          _ => const SizedBox.shrink(),
-        };
+      builder: (context, data) {
+        final (price, errorText) = data;
+
+        return CustomFormField(
+          label: 'Price',
+          value: price,
+          onChanged: (value) =>
+              context.read<ProductRegistrationBloc>().add(PriceChanged(value)),
+          hintText: 'Enter price',
+          errorText: errorText,
+          keyboardType: TextInputType.number,
+          required: true,
+          suffix: const Text('IDR'),
+        );
       },
     );
   }
@@ -585,28 +647,25 @@ class ProductImagesWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          return previous.formData.selectedImages !=
-              current.formData.selectedImages;
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      List<File>
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return state.formData.selectedImages;
         }
-        return previous.runtimeType != current.runtimeType;
+        return [];
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(:final formData) => ProductImagePicker(
-            selectedImages: formData.selectedImages,
-            onImageSelected: (image) => context
-                .read<ProductRegistrationBloc>()
-                .add(ImageSelected(image)),
-            onImageRemoved: (index) => context
-                .read<ProductRegistrationBloc>()
-                .add(ImageRemoved(index)),
-          ),
-          _ => const SizedBox.shrink(),
-        };
+      builder: (context, selectedImages) {
+        return ProductImagePicker(
+          selectedImages: selectedImages,
+          onImageSelected: (image) =>
+              context.read<ProductRegistrationBloc>().add(ImageSelected(image)),
+          onImageRemoved: (index) =>
+              context.read<ProductRegistrationBloc>().add(ImageRemoved(index)),
+        );
       },
     );
   }
@@ -617,62 +676,59 @@ class SubmitButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductRegistrationBloc, ProductRegistrationState>(
-      buildWhen: (previous, current) {
-        if (previous is ProductRegistrationData &&
-            current is ProductRegistrationData) {
-          return previous.canSubmit != current.canSubmit ||
-              previous.isSubmitting != current.isSubmitting;
+    return BlocSelector<
+      ProductRegistrationBloc,
+      ProductRegistrationState,
+      (bool, bool)
+    >(
+      selector: (state) {
+        if (state is ProductRegistrationData) {
+          return (state.canSubmit, state.isSubmitting);
         }
-        return previous.runtimeType != current.runtimeType;
+        return (false, false);
       },
-      builder: (context, state) {
-        return switch (state) {
-          ProductRegistrationData(:final canSubmit, :final isSubmitting) =>
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: canSubmit
-                    ? () => context.read<ProductRegistrationBloc>().add(
-                        const SubmitForm(),
-                      )
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: isSubmitting
-                    ? const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Text('Creating Product...'),
-                        ],
-                      )
-                    : const Text(
-                        'Create Product',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+      builder: (context, data) {
+        final (canSubmit, isSubmitting) = data;
+
+        return SizedBox(
+          height: 50,
+          child: ElevatedButton(
+            onPressed: canSubmit
+                ? () => context.read<ProductRegistrationBloc>().add(
+                    const SubmitForm(),
+                  )
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-          _ => const SizedBox.shrink(),
-        };
+            child: isSubmitting
+                ? const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Creating Product...'),
+                    ],
+                  )
+                : const Text(
+                    'Create Product',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+          ),
+        );
       },
     );
   }
